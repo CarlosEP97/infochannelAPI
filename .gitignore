@@ -1,0 +1,17 @@
+/venv
+/media
+/db.sqlite3
+migrations
+__pycache__
+
+#IDE Folders
+.idea
+
+#VENV Folders
+venv
+
+
+#DJango migrations Folders
+static
+
+
