@@ -41,7 +41,7 @@ class Timelines(admin.ModelAdmin):
         'position',
     )
 
-    @admin.display(ordering='campaigns__campaign_name', description='campaign name')
+    @admin.display(ordering='campaign__campaign_name', description='campaign name')
     def get_campaign_name(self, obj):
         return obj.campaign.campaign_name
 

@@ -120,8 +120,9 @@ class CampaignTimelines(generics.GenericAPIView):
         data = self.serializer_class(timeline).data
         return Response(data, status=status.HTTP_200_OK)
 
-    """Update timeline position """
+
     def put(self, request, *args, **kwargs):
+        """Update timeline position """
         timeline = Timelines.objects.by_timeline_obj(self.request.data.get('pk', None))
         print(request.data)
         serializer = TimelinePositionUpdate(timeline, data=request.data, partial=True,
@@ -161,6 +162,7 @@ class TimelineDetail(generics.GenericAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, *args, **kwargs):
+        """""restrict the date for update hacer esto"""
         timeline = self.get_object()
         campaign = timeline.campaign
         if campaign.playback_mode is True:
@@ -280,6 +282,7 @@ class PlaylistAddfile(mixins.UpdateModelMixin, generics.GenericAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
     def put(self, request, *args, **kwargs):
+        """"limit for move a file hacer esto"""
         playlist = self.get_object()
         file = playlist.addfiles_set.get(pk=self.request.data.get('resource_id'))
         #form data

@@ -60,6 +60,9 @@ class PlayerRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         try:
             if user:
+                player = user.player_set.get(pk=self.kwargs.get('pk'))
+                if not player.status:
+                    return None
                 return user.player_set.get(pk=self.kwargs.get('pk'))
         except ObjectDoesNotExist:
             return None

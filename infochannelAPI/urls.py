@@ -23,6 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('resources/',include('resources.urls')),
     path('players/',include('players.urls')),
-    # path('campaigns/',include('campaigns.urls')),
+    path('campaigns/',include('campaigns.urls')),
     path('user/',include('users.urls')),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

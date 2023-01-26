@@ -16,7 +16,7 @@ class CampaignsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaigns
         ordering = ('campaign_name',)
-        exclude = ('id',)
+        fields = '__all__'
 
 
 class UpdateCampaignsSerializer(serializers.ModelSerializer):
@@ -90,7 +90,7 @@ class TimelinePositionUpdate(serializers.ModelSerializer):
 
 
 class PlaylistSerializer(serializers.ModelSerializer):
-    resource_num = serializers.SerializerMethodField()
+    # resource_num = serializers.SerializerMethodField()
 
     class Meta:
         model = Playlist
@@ -105,8 +105,8 @@ class PlaylistSerializer(serializers.ModelSerializer):
     #     if width or height or top or left > self.context['timeline'].width and self.context['timeline'].height:
     #         raise serializers.ValidationError('....')
 
-    def get_resource_num(self, obj):
-        return obj.resource_num
+    # def get_resource_num(self, obj):
+    #     return obj.resource_num
     def create(self, validated_data):
         timeline = self.context['timeline']
         playlist = Playlist.objects.create(timelines=timeline, **validated_data)
