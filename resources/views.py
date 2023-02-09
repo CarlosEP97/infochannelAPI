@@ -34,14 +34,12 @@ class ResourcesList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        try:
-            if user:
-                return Resource.objects.by_user_id(user)
-        except EmptyResultSet:
-            return None
+        if user:
+            return Resource.objects.by_user_id(user)
+
 
     def perform_create(self, serializer):
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             if serializer:
                 return Response(status=status.HTTP_201_CREATED)
@@ -57,12 +55,8 @@ class ResourcesRetrieve(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         user = self.request.user
-        try:
-            if user:
-                resource = user.resource_set.get(pk=self.kwargs.get('pk'))
-                return resource
-        except ObjectDoesNotExist:
-            resource = None
+        if user:
+            resource = user.resource_set.get(pk=self.kwargs.get('pk'))
             return resource
 
     def put(self, request, *args, **kwargs):

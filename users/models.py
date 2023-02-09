@@ -5,6 +5,10 @@ from django.core.validators import RegexValidator
 from django.utils import timezone
 
 
+def user_picture_upload_handler(instance,filename):
+    return f'{instance.first_name}/{filename}'
+
+
 class UserManager(BaseUserManager):
 
     def create_user(self,email,first_name,last_name,password=None,**kwargs):
@@ -51,6 +55,12 @@ class User(AbstractBaseUser,PermissionsMixin):
         blank=True,
         null=True
     )
+
+    # profile_picture = models.ImageField(
+    #     upload_to= user_picture_upload_handler,
+    #     blank= True,
+    #     null= True,
+    # )
 
     is_staff = models.BooleanField(
         default=False,

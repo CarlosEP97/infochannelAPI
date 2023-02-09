@@ -31,8 +31,8 @@ class Playerlist(generics.ListCreateAPIView):
         try:
             if user:
                 return user.player_set.all().filter(status=True)
-        except EmptyResultSet :
-            return None
+        except EmptyResultSet as e:
+            return Response({"error": e}, status=status.HTTP_204_NO_CONTENT)
 
     def perform_create(self, serializer):
         if serializer.is_valid():
@@ -58,14 +58,12 @@ class PlayerRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         user = self.request.user
-        try:
-            if user:
-                player = user.player_set.get(pk=self.kwargs.get('pk'))
-                if not player.status:
-                    return None
-                return user.player_set.get(pk=self.kwargs.get('pk'))
-        except ObjectDoesNotExist:
-            return None
+        if user:
+            player = user.player_set.get(pk=self.kwargs.get('pk'))
+            if not player.status:
+                return None
+            return user.player_set.get(pk=self.kwargs.get('pk'))
+
 
     def update(self, request, *args, **kwargs):
         player = self.get_object()

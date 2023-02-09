@@ -107,6 +107,7 @@ class PlaylistSerializer(serializers.ModelSerializer):
 
     # def get_resource_num(self, obj):
     #     return obj.resource_num
+
     def create(self, validated_data):
         timeline = self.context['timeline']
         playlist = Playlist.objects.create(timelines=timeline, **validated_data)

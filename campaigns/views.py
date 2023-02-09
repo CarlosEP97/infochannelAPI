@@ -1,18 +1,20 @@
 from .models import Campaigns, Timelines, Playlist, AddFiles
 from resources.models import Resource
-from .serializers import CampaignsSerializer, UpdateCampaignsSerializer, TimelinesOnSerializers,TimelinesOffSerializers,TimelineCreateSerializer,\
-    TimelinePositionUpdate,PlaylistSerializer,PlaylistDetailSerializer,PlaylistItemsSerializer
-from rest_framework import generics,mixins
-from django.db.models import Case,When
-from django.db.models import F,Q,Count
+from .serializers import CampaignsSerializer, UpdateCampaignsSerializer, TimelinesOnSerializers, \
+    TimelinesOffSerializers, TimelineCreateSerializer, \
+    TimelinePositionUpdate, PlaylistSerializer, PlaylistDetailSerializer, PlaylistItemsSerializer
+from rest_framework import generics, mixins
+from django.db.models import Case, When
+from django.db.models import F, Q, Count
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import filters
 from rest_framework.filters import SearchFilter
-#e#Exceptions
-from django.core.exceptions import ObjectDoesNotExist , EmptyResultSet
+# e#Exceptions
+from django.core.exceptions import ObjectDoesNotExist, EmptyResultSet
+
 
 # view for create campaign step by step
 # 1 camping object create : name
@@ -28,19 +30,14 @@ class Campaign(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CampaignsSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['^campaign_name','user__username']
+    search_fields = ['^campaign_name', 'user__username']
     ordering = ('created_date',)
     ordering_fields = 'last_update'
 
-
     def get_queryset(self):
         user = self.request.user
-        try:
-            if user:
-                return Campaigns.objects.by_user_id(user)
-        except EmptyResultSet:
-            return None
-
+        if user:
+            return Campaigns.objects.by_user_id(user)
 
     def perform_create(self, serializer):
         if serializer.is_valid():
@@ -50,20 +47,15 @@ class Campaign(generics.ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class CampaignRetrieve(generics.RetrieveUpdateDestroyAPIView):
-
     permission_classes = [IsAuthenticated]
     serializer_class = CampaignsSerializer
 
     def get_object(self):
         user = self.request.user.id
-        try:
-            if user:
-                campaign = Campaigns.objects.by_user_campaigns(user,self.kwargs.get('pk',None))
-                return campaign
-        except ObjectDoesNotExist:
-            return None
+        if user:
+            campaign = Campaigns.objects.by_user_campaigns(user, self.kwargs.get('pk', None))
+            return campaign
 
     def put(self, request, *args, **kwargs):
         if not self.get_object():
@@ -89,23 +81,17 @@ class CampaignTimelines(generics.GenericAPIView):
     def get_queryset(self):
         user = self.request.user.id
         campaign_pk = self.kwargs.get('pk', None)
-        try:
-            if user and campaign_pk:
-                campaign = Campaigns.objects.by_user_campaigns(user, campaign_pk)
-                campaign_timelines = campaign.timelines_set.all()
-                return campaign_timelines
-        except EmptyResultSet:
-            return None
+        if user and campaign_pk:
+            campaign = Campaigns.objects.by_user_campaigns(user, campaign_pk)
+            campaign_timelines = campaign.timelines_set.all()
+            return campaign_timelines
 
     def get_object(self):
         user = self.request.user.id
         campaign_pk = self.kwargs.get('pk', None)
-        try:
-            if user and campaign_pk:
-                campaign = Campaigns.objects.by_user_campaigns(user, campaign_pk)
-                return campaign
-        except ObjectDoesNotExist:
-            return None
+        if user and campaign_pk:
+            campaign = Campaigns.objects.by_user_campaigns(user, campaign_pk)
+            return campaign
 
     def get(self, request, *args, **kwargs):
         campaign_timelines = self.get_queryset()
@@ -120,7 +106,6 @@ class CampaignTimelines(generics.GenericAPIView):
         data = self.serializer_class(timeline).data
         return Response(data, status=status.HTTP_200_OK)
 
-
     def put(self, request, *args, **kwargs):
         """Update timeline position """
         timeline = Timelines.objects.by_timeline_obj(self.request.data.get('pk', None))
@@ -133,7 +118,7 @@ class CampaignTimelines(generics.GenericAPIView):
 
     def delete(self, request, *args, **kwargs):
         campaign = self.get_object()
-        campaign_get = Timelines.objects.by_timeline_campaigns(campaign,self.request.data.get('pk', None))
+        campaign_get = Timelines.objects.by_timeline_campaigns(campaign, self.request.data.get('pk', None))
         timelines = campaign.timelines_set.filter(position__gte=campaign_get.position).exclude(pk=campaign_get.pk)
         campaign_get.delete()
         timelines.update(position=F('position') - 1)
@@ -144,12 +129,9 @@ class TimelineDetail(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        try:
-            if self.request.user:
-                timeline = Timelines.objects.by_timeline_obj(self.kwargs.get('pk'))
-                return timeline
-        except ObjectDoesNotExist:
-            return None
+        if self.request.user:
+            timeline = Timelines.objects.by_timeline_obj(self.kwargs.get('pk'))
+            return timeline
 
     def get(self, request, *args, **kwargs):
         timeline = self.get_object()
@@ -178,17 +160,13 @@ class TimelineDetail(generics.GenericAPIView):
 
 
 class TimelinesLayouts(generics.GenericAPIView):
-
     permission_classes = [IsAuthenticated]
     serializer_class = PlaylistSerializer
 
     def get_object(self):
-        try:
-            if self.request.user:
-                timeline = Timelines.objects.by_timeline_obj(self.kwargs.get('pk'))
-                return timeline
-        except ObjectDoesNotExist:
-            return None
+        if self.request.user:
+            timeline = Timelines.objects.by_timeline_obj(self.kwargs.get('pk'))
+            return timeline
 
     def get(self, request, *args, **kwargs):
         timeline = self.get_object()
@@ -199,7 +177,7 @@ class TimelinesLayouts(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
-                                        context={'timeline': self.get_object()})
+                                           context={'timeline': self.get_object()})
         serializer.is_valid(raise_exception=True)
         layout = serializer.save()
         data = self.serializer_class(layout).data
@@ -207,15 +185,13 @@ class TimelinesLayouts(generics.GenericAPIView):
 
 
 class Layouts(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
 
     def get_object(self):
-        try:
-            if self.request.user:
-                layout = Playlist.objects.by_playlist_id(self.kwargs.get('pk'))
-                return layout
-        except ObjectDoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if self.request.user:
+            layout = Playlist.objects.by_playlist_id(self.kwargs.get('pk'))
+            return layout
 
     def get(self, request, *args, **kwargs):
         layout = self.get_object()
@@ -233,38 +209,33 @@ class Layouts(generics.GenericAPIView):
     def delete(self, request, *args, **kwargs):
         layout = self.get_object()
         layout.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT) # delete must be in timeline if timeline layout is < 1 can delete the playlist
+        return Response(
+            status=status.HTTP_204_NO_CONTENT)  # delete must be in timeline if timeline layout is < 1 can delete the playlist
 
 
 class PlaylistAddfile(mixins.UpdateModelMixin, generics.GenericAPIView):
-
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
     serializer_class = PlaylistItemsSerializer
 
     def get_queryset(self):
+
         user = self.request.user
-        try:
-            if user:
-                print(self.request.data)
-                pk_ids = [int(pk) for pk in self.request.data.get('pk_ids', None).split(',')]
-                preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_ids)])
-                print(preserved)
-                resource = user.resource_set.filter(pk__in=pk_ids).order_by(preserved)
-                return resource
-        except EmptyResultSet:
-            return None
+        if user:
+            print(self.request.data)
+            pk_ids = [int(pk) for pk in self.request.data.get('pk_ids', None).split(',')]
+            preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_ids)])
+            print(preserved)
+            resource = user.resource_set.filter(pk__in=pk_ids).order_by(preserved)
+            return resource
 
     def get_object(self):
         user = self.request.user.pk
-        try:
-            if user:
-                playlist = Playlist.objects.by_playlist_id(self.kwargs.get('playlist_id'))
-                # print(list(playlist.addfiles_set.all().values('resource','position')))
-                return playlist
-        except ObjectDoesNotExist:
-            return None
+        if user:
+            playlist = Playlist.objects.by_playlist_id(self.kwargs.get('playlist_id'))
+            # print(list(playlist.addfiles_set.all().values('resource','position')))
+            return playlist
 
-    def post(self,request,*args,**kwargs):
+    def post(self, request, *args, **kwargs):
         user = self.request.user
         if user:
             playlist = self.get_object()
@@ -285,7 +256,7 @@ class PlaylistAddfile(mixins.UpdateModelMixin, generics.GenericAPIView):
         """"limit for move a file hacer esto"""
         playlist = self.get_object()
         file = playlist.addfiles_set.get(pk=self.request.data.get('resource_id'))
-        #form data
+        # form data
         serializer_class = self.get_serializer_class()
         serializer = serializer_class(file, data=request.data, partial=True, context={"playlist": playlist})
         print(self.request.data)
@@ -294,7 +265,6 @@ class PlaylistAddfile(mixins.UpdateModelMixin, generics.GenericAPIView):
         data = PlaylistDetailSerializer(playlist).data
         return Response(data, status=status.HTTP_200_OK)
 
-
     def delete(self, request, *args, **kwargs):
         p = self.get_object()
         file = p.addfiles_set.get(pk=self.request.data.get('resource_id'))
@@ -302,21 +272,21 @@ class PlaylistAddfile(mixins.UpdateModelMixin, generics.GenericAPIView):
         file.delete()
         files.update(position=F('position') - 1)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 #
 
 #
 class RandomOrder(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
+
     # serializer_class = PlaylistItems
 
     def get_object(self):
         user = self.request.user.pk
-        try:
-            if user:
-                playlist = Playlist.objects.by_playlist_id(self.kwargs.get('playlist_id'))
-                return playlist
-        except ObjectDoesNotExist:
-            return None
+        if user:
+            playlist = Playlist.objects.by_playlist_id(self.kwargs.get('playlist_id'))
+            return playlist
 
     def put(self, request, *args, **kwargs):
         playlist = self.get_object()
@@ -330,12 +300,10 @@ class RandomOrder(generics.GenericAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-
 class SearchPlaylist(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
 
-
-    def get(self,request,*args,**kwargs):
+    def get(self, request, *args, **kwargs):
         sf = SearchFilter()
         # print(sf.search_param) = search in postman
         subject = request.query_params[sf.search_param]
@@ -355,5 +323,5 @@ class SearchPlaylist(generics.GenericAPIView):
                 rank=SearchRank(vector, query), resource_num=Count('resources')).order_by('-rank')
             print(vars(p[0]))
             # print(p)
-            data = PlaylistSerializer(p,many=True)
-        return Response(data.data,status=status.HTTP_200_OK)
+            data = PlaylistSerializer(p, many=True)
+        return Response(data.data, status=status.HTTP_200_OK)
